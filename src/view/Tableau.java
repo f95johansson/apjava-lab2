@@ -11,8 +11,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import static javax.swing.BorderFactory.createEmptyBorder;
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
 public class Tableau extends JPanel {
@@ -21,26 +22,57 @@ public class Tableau extends JPanel {
         void onItemSelect(String name, int index, int id);
     }
 
+
+    private static final Color SELECTED_ROW_BACKGROUND = new Color(36, 108, 129);
+    private static final Color EVEN_BACKGROUND = new Color(228, 234, 235);
+    private static final Color ODD_BACKGROUND = Color.WHITE;
+    private static final int MARGIN = 12;
+    private static final int SIDE_SHADOW_WIDTH = 4;
+    private static final int TOP_SHADOW_HEIGHT = 12;
+    private static final int CORNER_SHADOW_SIZE = 12;
+    private static final int ROW_HEIGHT = 48;
+    private static final int HEADER_HEIGHT = ROW_HEIGHT - TOP_SHADOW_HEIGHT;
+
     private JTable table;
+    private JScrollPane scroll;
     private DefaultTableModel model;
     private Image shadowTop;
+    private Image shadowLeft;
+    private Image shadowRight;
+    private Image shadowLeftCorner;
+    private Image shadowRightCorner;
+    private Map<Integer, Integer> ids = new HashMap<>();
 
-    public Tableau(int rows, int columns) {
+    public Tableau() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        table = new JTable(rows, columns);
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(createEmptyBorder());
+        table = new JTable(0, 2);
         table.setIntercellSpacing(new Dimension(0, 0));
+
+        JLabel label = new JLabel("<html><body><pre style=\"font-size:12px;font-family:sans-serif\">Tid      Program</pre></body></html>");
+        label.setBorder(BorderFactory.createEmptyBorder(
+                MARGIN+TOP_SHADOW_HEIGHT,
+                0, 0, 0));
+        label.setBackground(Color.WHITE);
+
+        scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createEmptyBorder(
+                        MARGIN+TOP_SHADOW_HEIGHT+HEADER_HEIGHT - label.getPreferredSize().height,
+                        MARGIN+SIDE_SHADOW_WIDTH,
+                        0,
+                        MARGIN+SIDE_SHADOW_WIDTH));
+
+        add(label);
         add(scroll);
 
+        scroll.setBackground(new Color(0, 0, 0, 0));
         setBackground(new Color(0, 0, 0, 0));
 
 
-        model = new DefaultTableModel(rows, columns) {
+        model = new DefaultTableModel(0, 2) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                return String.class;
+                return columnIndex == 0 ? String.class : TableauRow.class;
             }
 
             @Override
@@ -48,10 +80,12 @@ public class Tableau extends JPanel {
                 return false;
             }
         };
+
         table.setModel(model);
         table.setDragEnabled(false);
+        table.setDefaultRenderer(TableauRow.class, new CellRenderer());
         table.setDefaultRenderer(String.class, new CellRenderer());
-        table.setRowHeight(48);
+        table.setRowHeight(ROW_HEIGHT);
 
         table.setSelectionMode(SINGLE_SELECTION);
 
@@ -59,44 +93,73 @@ public class Tableau extends JPanel {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         table.getColumnModel().getColumn(0).setMaxWidth(110);
         table.getColumnModel().getColumn(0).setMinWidth(110);
-        /*
-        JTableHeader header = new JTableHeader();
-        header.setDefaultRenderer(new CellRenderer());
-        TableColumnModel headerModel = new DefaultTableColumnModel();
-        headerModel.addColumn(new TableColumn());
-        header.setColumnModel(headerModel);
-        table.setTableHeader(header);
-        */
-
 
 
         try {
             shadowTop = ImageIO.read(getClass().getResourceAsStream("/tablaou-top-shadow.png"));
+            shadowLeft = ImageIO.read(getClass().getResourceAsStream("/tablaou-left-shadow.png"));
+            shadowRight = ImageIO.read(getClass().getResourceAsStream("/tablaou-right-shadow.png"));
+            shadowLeftCorner = ImageIO.read(getClass().getResourceAsStream("/tablaou-left-corner.png"));
+            shadowRightCorner = ImageIO.read(getClass().getResourceAsStream("/tablaou-right-corner.png"));
         } catch (IOException e) {
             e.printStackTrace();
             // FIXME empty catch
         }
     }
 
-    public void addEpisode(String time, String name, int id) {
-        model.addRow(new String[] {time, name});
+    public void clear() {
+        model.setRowCount(0);
+    }
+
+    public void addEpisode(TableauRow episode) {
+        ids.put(model.getRowCount(), episode.getID());
+        model.addRow(new Object[] {episode.getTime(), episode});
+    }
+
+    public void setSelected(int index) {
+        try {
+            table.setRowSelectionInterval(index, index);
+            Rectangle cellRect = table.getCellRect(index, 0, true);
+            cellRect.height += scroll.getViewport().getHeight();
+            table.scrollRectToVisible(cellRect);
+        } catch (IllegalArgumentException e) {
+            // index outside, ignore
+        }
     }
 
     public void setItemSelectListener(ItemSelect itemSelectListener) {
         table.getSelectionModel().addListSelectionListener(event -> {
-            Object value = table.getValueAt(table.getSelectedRow(), 1);
-            if (value != null) {
-                String name = value.toString();
-                itemSelectListener.onItemSelect(name, table.getSelectedRow(), 1); // TODO if null
+            if (!event.getValueIsAdjusting()) { // selection is triggered twice
+                Object value = null;
+                try {
+                    value = table.getValueAt(table.getSelectedRow(), 1);
+                } catch (ArrayIndexOutOfBoundsException e) { /* value = null */ }
+
+                if (value != null) {
+                    String name = value.toString();
+                    int id = ids.get(table.getSelectedRow());
+                    itemSelectListener.onItemSelect(name, table.getSelectedRow(), id); // TODO if null
+                }
+                repaint();
             }
         });
     }
 
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
 
-        g.drawImage(shadowTop, 0, 0, getWidth(), 2, null);
+        g.drawImage(shadowTop, MARGIN+ CORNER_SHADOW_SIZE, MARGIN, getWidth()-(MARGIN+CORNER_SHADOW_SIZE)*2, TOP_SHADOW_HEIGHT, null);
+
+        g.drawImage(shadowLeft, MARGIN, MARGIN+TOP_SHADOW_HEIGHT, SIDE_SHADOW_WIDTH, getHeight()-MARGIN+TOP_SHADOW_HEIGHT, null);
+        g.drawImage(shadowRight, getWidth()-MARGIN-SIDE_SHADOW_WIDTH, MARGIN+TOP_SHADOW_HEIGHT, SIDE_SHADOW_WIDTH, getHeight()-MARGIN+TOP_SHADOW_HEIGHT, null);
+
+        g.drawImage(shadowLeftCorner, MARGIN, MARGIN, null);
+        g.drawImage(shadowRightCorner, getWidth()-MARGIN-CORNER_SHADOW_SIZE, MARGIN, null);
+
+        g.setColor(Color.WHITE);
+        g.fillRect(MARGIN+SIDE_SHADOW_WIDTH, MARGIN+TOP_SHADOW_HEIGHT, getWidth()-(MARGIN+SIDE_SHADOW_WIDTH)*2, HEADER_HEIGHT);
+
     }
 
 
@@ -105,19 +168,30 @@ public class Tableau extends JPanel {
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
 
+            Color background;
+            Color foreground;
 
-            if (isSelected) {
-                setBackground(new Color(36, 108, 129));
-                setForeground(Color.WHITE);
+
+            TableauRow info = (TableauRow) table.getModel().getValueAt(row, 1);
+            if (info.isEnabled()) {
+                foreground = Color.BLACK;
             } else {
-                setForeground(Color.BLACK);
-                if (row % 2 == 0) {
-                    setBackground(new Color(228, 234, 235));
-                } else {
-                    setBackground(Color.WHITE);
-                }
+                foreground = Color.GRAY;
             }
 
+            if (row % 2 == 0) {
+                background = EVEN_BACKGROUND;
+            } else {
+                background = ODD_BACKGROUND;
+            }
+
+            if (isSelected) {
+                background = SELECTED_ROW_BACKGROUND;
+                foreground = Color.WHITE;
+            }
+
+            setBackground(background);
+            setForeground(foreground);
             setValue(value);
 
             return this;

@@ -5,8 +5,11 @@
  */
 package view;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 
 /**
@@ -31,6 +34,9 @@ public class RadioUI {
     private Tableau tableau;
 
     public RadioUI() {
+        //System.setProperty("apple.laf.useScreenMenuBar", "true");
+        //System.setProperty("com.apple.mrj.application.apple.menu.about.name", "RadioInfo");
+
         SwingUtilities.invokeLater(this::setup);
     }
 
@@ -43,9 +49,9 @@ public class RadioUI {
         channelMenu = new ChannelMenu();
         channelDisplay = new ChannelDisplay();
         episodeInfo = new EpisodeInfo();
-        tableau = new Tableau(0, 2);
+        tableau = new Tableau();
 
-        window.setJMenuBar(channelMenu.menuBar);
+        window.setJMenuBar(channelMenu);
         window.add(channelDisplay);
         window.add(episodeInfo);
         window.add(tableau);
@@ -57,52 +63,95 @@ public class RadioUI {
         window.setLocationRelativeTo(null);
 
         window.setVisible(true);
-
-
-
-
-        channelMenu.addMenu("Lokal kanal");
-        channelMenu.addMenu("Minoritet och språk");
-        channelMenu.addMenu("Fler kanaler");
-        channelMenu.addMenu("Extrakanaler");
-
-        channelMenu.addMenuItem("Lokal kanal", "P4 Västebotten", 164);
     }
 
-    public void setMenus(Collection<Pair<String, Collection<Pair<String, Integer>>>> menusWithDropDown) {
-        for (Pair<String, Collection<Pair<String, Integer>>> menu : menusWithDropDown) {
-
-            channelMenu.addMenu(menu.getFirst());
-
-            for (Pair<String, Integer> menuItem : menu.getSecond()) {
-                channelMenu.addMenuItem(menu.getFirst(), menuItem.getFirst(), menuItem.getSecond());
+    public void setMenus(Collection<String> menus, Collection<Triplet<String, String, Integer>> dropdowns) {
+        SwingUtilities.invokeLater(() -> {
+            for (String menu : menus) {
+                channelMenu.addMenu(menu);
             }
-        }
+            for (Triplet<String, String, Integer> menuItem : dropdowns) {
+                channelMenu.addMenuItem(menuItem.getFirst(), menuItem.getSecond(), menuItem.getThird());
+            }
+        });
     }
 
-    public void setDisplayMenu() {
-
+    public void setDisplayMenu(Collection<Triplet<InputStream, String, Integer>> imageMenus) {
+        SwingUtilities.invokeLater(() -> {
+            for (Triplet<InputStream, String, Integer> menu : imageMenus) {
+                try {
+                    channelDisplay.addMenu(ImageIO.read(menu.getFirst()), menu.getSecond(), menu.getThird());
+                } catch (IOException e) {
+                    e.printStackTrace(); // FIXME empty catch
+                }
+            }
+        });
     }
 
-    public void setTableauContent(Collection<Triplet<String, String, Integer>> episodesInfo) {
-        for (Triplet<String, String, Integer> info : episodesInfo) {
-            tableau.addEpisode(info.getFirst(), info.getSecond(), info.getThird());
-        }
+    public void setTableauContent(Collection<TableauRow> episodes) {
+        SwingUtilities.invokeLater(() -> {
+            tableau.clear();
+
+            for (TableauRow episode : episodes) {
+                tableau.addEpisode(episode);
+            }
+        });
     }
 
+    public void setEpisodeContent(String title, String subtitle, String text, InputStream image) {
+        SwingUtilities.invokeLater(() -> {
+            episodeInfo.setTitle(title);
+            episodeInfo.setSubtitle(subtitle);
+            episodeInfo.setText(text);
+            if (image != null) {
+                try {
+                    episodeInfo.setImage(ImageIO.read(image));
+                } catch (IOException e) {
+                    e.printStackTrace(); // FIXME empty catch
+                }
+            } else {
+                episodeInfo.setImage(null);
+            }
+            episodeInfo.refresh();
+        });
+    }
+
+    public void setTitle(String title) {
+        SwingUtilities.invokeLater(() -> {
+            window.setTitle(title);
+        });
+    }
 
     public void setColor(String hexColor) {
         SwingUtilities.invokeLater(() -> {
-            String newHex = hexColor; // to be able to change
-            if (!newHex.startsWith("#")) {
-                newHex = "#" + newHex;
-            }
-
             try {
+                String newHex = hexColor; // to be able to change
+                if (!newHex.startsWith("#")) {
+                    newHex = "#" + newHex;
+                }
                 window.getContentPane().setBackground(Color.decode(newHex));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | NullPointerException e) {
                 window.getContentPane().setBackground(DEFAULT_BACKGROUND);
             }
+        });
+    }
+
+    public void clear() {
+        SwingUtilities.invokeLater(() -> {
+            episodeInfo.clear();
+            tableau.clear();
+        });
+    }
+
+    public void setEpisodeSelected(int index) {
+        SwingUtilities.invokeLater(() -> {
+            tableau.setSelected(index);
+        });
+    }
+
+    public void setChannelSelected(int index) {
+        SwingUtilities.invokeLater(() -> {
+            ((JButton) channelDisplay.getComponents()[index]).doClick();
         });
     }
 
@@ -115,6 +164,7 @@ public class RadioUI {
     public void setChannelSelectListener(ChannelSelect listener) {
         SwingUtilities.invokeLater(() -> {
             channelMenu.setOnClickListener(listener::onChannelSelect);
+            channelDisplay.setOnClickListener(listener::onChannelSelect);
         });
     }
 }

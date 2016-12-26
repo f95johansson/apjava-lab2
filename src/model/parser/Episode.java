@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 
 public class Episode {
 
-    public int episodeid;
+    public int episodeid = -1;
     public String title;
     public String subtitle;
     public String description;

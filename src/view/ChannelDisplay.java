@@ -10,12 +10,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
+import static java.awt.Image.SCALE_SMOOTH;
+
 public class ChannelDisplay extends JPanel {
+
+    public interface OnClick {
+        void onClick(String name, int id);
+    }
 
     private static final int IMAGE_BUTTON_SIZE = 58;
 
     private Image p2Image;
     private Image imageButtonShadow;
+    private OnClick onClickListener;
 
     public ChannelDisplay() {
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -30,12 +37,14 @@ public class ChannelDisplay extends JPanel {
             e.printStackTrace();
             // FIXME empty catch
         }
+    }
 
-        add(createButton(p2Image));
-        add(createButton(p2Image));
-        add(createButton(p2Image));
-        add(createButton(p2Image));
-        add(createButton(p2Image));
+    public void addMenu(Image image, String name, int id) {
+        add(new ImageButton(image, name, id, onClickListener));
+    }
+
+    public void setOnClickListener(OnClick listener) {
+        onClickListener = listener;
     }
 
     @Override
@@ -62,17 +71,21 @@ public class ChannelDisplay extends JPanel {
         super.paintComponent(g);
 
         for (Component component : getComponents()) {
-            if (component instanceof JButton) {
-                g.drawImage(imageButtonShadow, component.getX() - 4, -2, null);
-            }
+            g.drawImage(imageButtonShadow, component.getX() - 4, -2, null);
         }
     }
 
+    private static class ImageButton extends JButton {
 
-    private JButton createButton(Image image) {
-        Image imageScaled = image.getScaledInstance(IMAGE_BUTTON_SIZE, IMAGE_BUTTON_SIZE,  java.awt.Image.SCALE_SMOOTH);
-        JButton button = new JButton(new ImageIcon(imageScaled));
-        button.setBorder(BorderFactory.createEmptyBorder());
-        return button;
+        public ImageButton(Image image, String name, int id, OnClick listener) {
+            super(new ImageIcon(
+                    image.getScaledInstance(IMAGE_BUTTON_SIZE,
+                                            IMAGE_BUTTON_SIZE,
+                                            SCALE_SMOOTH)));
+
+            setBorder(BorderFactory.createEmptyBorder());
+
+            addActionListener(e -> listener.onClick(name, id));
+        }
     }
 }

@@ -80,8 +80,7 @@ public class TableauParserTest {
     public void shouldParse() throws Exception {
         InputStream stream = new ByteArrayInputStream(exampleXML.getBytes(StandardCharsets.UTF_8));
         TableauParser parser = new TableauParser(stream);
-        parser.parse();
-        Collection<Episode> episodes = parser.getResult();
+        Collection<Episode> episodes = parser.parse();
 
         assertEquals(realEpisodes, episodes);
     }

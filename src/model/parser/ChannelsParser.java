@@ -7,6 +7,7 @@ package model.parser;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.XMLEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +23,7 @@ public class ChannelsParser extends Parser<Channel> {
     }
 
     @Override
-    public void parse() throws XMLStreamException {
+    public List<Channel> parse() throws XMLStreamException {
         XMLEventReader reader = getReader();
 
         channels = new ArrayList<>();
@@ -31,14 +32,14 @@ public class ChannelsParser extends Parser<Channel> {
             XMLEvent event = reader.nextEvent();
             if (event.isStartElement()) {
                 if (isElement(event.asStartElement(), "channel")) {
-                    channels.add(parseChannel(reader));
+                    Iterator<Attribute> attributes = event.asStartElement().getAttributes();
+                    Channel channel = parseChannel(reader);
+                    parseChannelAttributes(attributes, channel);
+                    channels.add(channel);
                 }
             }
         }
-    }
 
-    @Override
-    public Collection<Channel> getResult() {
         return channels;
     }
 
@@ -58,5 +59,16 @@ public class ChannelsParser extends Parser<Channel> {
         matchElements(reader, mapElements, "channel");
 
         return channel;
+    }
+
+    private void parseChannelAttributes(Iterator<Attribute> attributes, Channel channel) {
+        while (attributes.hasNext()) {
+            Attribute attribute = attributes.next();
+            if (isAttribute(attribute, "id")) {
+                channel.id = Integer.parseInt(attribute.getValue());
+            } else if (isAttribute(attribute, "name")) {
+                channel.name = attribute.getValue();
+            }
+        }
     }
 }

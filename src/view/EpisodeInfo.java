@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class EpisodeInfo extends JComponent {
 
-    private final int MARGIN = 16;
+    private final int MARGIN = 12;
     private final int EPISODE_IMAGE_SIZE = 110;
     private final int SIDE_SHADOW_WIDTH = 4;
     private final int TOP_SHADOW_HEIGHT = 2;
@@ -23,29 +23,24 @@ public class EpisodeInfo extends JComponent {
     private Image backgroundMiddle;
     private Image backgroundRight;
 
-    private String title = "Title";
-    private String subtitle = "Subtitle";
-    private String text = "Hello asdflkasdflk öasjksf  lkfsjk fsd jlsdfs ödfads fjk ldsf klöfsakl öfsdkl ödsf kljödsfa kljösdffkl öasdkl öfsal ösdafdfls öklösfd klöfsd lködfsa klösfa fklsöa j";
+    private String title = "";
+    private String subtitle = "";
+    private String text = "";
     private BufferedImage episodeImage;
-
-    private String centerTextPart1 = "<html><body><h1>hello</h1><p style=\"width:";
-    private String centerTextPart2 = "px\">";
-    private String centerTextPart3 = "</p></body></html>";
 
     private JLabel label;
 
     public EpisodeInfo() {
-        //setLayout(null);
+        setLayout(null);
 
-        label = new JLabel();
-        label.setLocation(MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE, MARGIN+TOP_SHADOW_HEIGHT);
+        label = new JLabel(text);
+        label.setLocation(MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE+MARGIN, MARGIN+TOP_SHADOW_HEIGHT+MARGIN/2);
+        add(label, BorderLayout.EAST);
 
         try {
             backgroundLeft = ImageIO.read(getClass().getResourceAsStream("/info_background_left.png"));
             backgroundMiddle = ImageIO.read(getClass().getResourceAsStream("/info_background_middle.png"));
             backgroundRight = ImageIO.read(getClass().getResourceAsStream("/info_background_right.png"));
-
-            episodeImage = ImageIO.read(getClass().getResourceAsStream("/ekot.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
             // FIXME empty catch
@@ -53,41 +48,58 @@ public class EpisodeInfo extends JComponent {
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        this.title = title == null ? "" : title;
     }
 
     public void setSubtitle(String subtitle) {
-        this.subtitle = subtitle;
+        this.subtitle = subtitle == null ? "" : subtitle;
     }
 
     public void setText(String text) {
-        this.text = text;
+        this.text = text == null ? "" : text;
     }
 
     public void setImage(BufferedImage episodeImage) {
         this.episodeImage = episodeImage;
     }
 
+    public void clear() {
+        title = "";
+        subtitle = "";
+        text = "";
+        episodeImage = null;
+        refresh();
+    }
+
+    public void refresh() {
+        repaint();
+    }
+
     @Override
     public Dimension getMaximumSize() {
         Dimension size = super.getMaximumSize();
-        return new Dimension((int) size.getWidth(), 152);
+        size.height = 152;
+        return size;
     }
 
     @Override
     public Dimension getMinimumSize() {
         Dimension size = super.getMinimumSize();
-        return new Dimension((int) size.getWidth(), 152);
+        size.height = 152;
+        return size;
     }
+
 
     @Override
     public Dimension getPreferredSize() {
         return getMaximumSize();
     }
 
-
     @Override
     protected void paintComponent(Graphics g) {
+        label.setText(formatCenteredText());
+        label.setSize(label.getPreferredSize());
+
         super.paintComponent(g);
         setSmoothRendering(g);
 
@@ -99,7 +111,9 @@ public class EpisodeInfo extends JComponent {
         g.drawImage(backgroundMiddle, MARGIN+leftWidth, MARGIN, getWidth()-(MARGIN*2+leftWidth + rightWidth), middleHeight, null);
         g.drawImage(backgroundRight, getWidth() - (MARGIN+rightWidth), MARGIN, null);
 
-        g.drawImage(episodeImage, MARGIN+SIDE_SHADOW_WIDTH, MARGIN+TOP_SHADOW_HEIGHT, EPISODE_IMAGE_SIZE, EPISODE_IMAGE_SIZE, null);
+        if (episodeImage != null) {
+            g.drawImage(episodeImage, MARGIN+SIDE_SHADOW_WIDTH, MARGIN+TOP_SHADOW_HEIGHT, EPISODE_IMAGE_SIZE, EPISODE_IMAGE_SIZE, null);
+        }
 
 
         /*
@@ -111,13 +125,27 @@ public class EpisodeInfo extends JComponent {
         g.drawString(text, MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE, MARGIN+TOP_SHADOW_HEIGHT+50);
         */
 
-        label.setText(formatCenteredText(text));
-        label.setSize(label.getPreferredSize());
-        label.paint(g);
+        //label.paint(g);
     }
 
-    private String formatCenteredText(String text) {
-        return centerTextPart1+(getWidth()-100)+centerTextPart2+text+centerTextPart3;
+    private String formatCenteredText() {
+        String formattedSubtitle;
+        if (subtitle == null || subtitle.equals("")) {
+            formattedSubtitle = "";
+        } else {
+            formattedSubtitle = "</p><p><b>" +
+                    subtitle +
+                    "</b>";
+        }
+
+        return  "<html><body><p style=\"font-size:14px;\">" +
+                title +
+                formattedSubtitle +
+                "</p><p style=\"width:" +
+                (getWidth()-MARGIN*2-SIDE_SHADOW_WIDTH*2-EPISODE_IMAGE_SIZE-100) +
+                "px\">" +
+                text +
+                "</p></body></html>";
     }
 
     private void setSmoothRendering(Graphics g) {

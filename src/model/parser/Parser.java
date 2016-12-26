@@ -17,8 +17,8 @@ import java.io.InputStream;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -35,9 +35,7 @@ abstract class Parser<T> {
         return eventReader;
     }
 
-    public abstract void parse() throws XMLStreamException;
-
-    public abstract Collection<T> getResult();
+    public abstract List<T> parse() throws XMLStreamException;
 
     void matchElements(XMLEventReader reader,
                        Map<String, Consumer<String>> mapElement,

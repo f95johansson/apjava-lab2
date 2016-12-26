@@ -23,7 +23,7 @@ public class TableauParser extends Parser<Episode> {
     }
 
     @Override
-    public void parse() throws XMLStreamException {
+    public List<Episode> parse() throws XMLStreamException {
         XMLEventReader reader = getReader();
 
         episodes = new ArrayList<>();
@@ -36,10 +36,7 @@ public class TableauParser extends Parser<Episode> {
                 }
             }
         }
-    }
 
-    @Override
-    public Collection<Episode> getResult() {
         return episodes;
     }
 
