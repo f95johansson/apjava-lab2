@@ -69,19 +69,24 @@ public class TableauUpdater implements Runnable {
             }
 
             List<Episode> episodes = tableauParser.parse();
+            /*if (episodes.equals(cachedEpisodes)) {
+                return; // nothing new in update
+            }*/
 
 
             if (Thread.currentThread().isInterrupted()) {
                 return;
             }
 
-            tableauLoadedListener.onTableauLoaded(channelID.get(), episodes); // TODO if null
+            if (tableauLoadedListener != null) {
+                tableauLoadedListener.onTableauLoaded(channelID.get(), episodes);
+            }
             cacheEpisodes(episodes);
 
         } catch (FileNotFoundException e) {
             // Load empty list of episodes
 
-            if (Thread.interrupted()) {
+            if (Thread.currentThread().isInterrupted()) {
                 return;
             }
             List<Episode> episodes = new ArrayList<>();

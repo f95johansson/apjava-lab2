@@ -31,12 +31,19 @@ public class ChannelMenu extends JMenuBar {
         add(newMenu);
     }
 
-    public void addMenuItem(String inMenu, String item, int id) {
+    /**
+     *
+     * @param inMenu
+     * @param name
+     * @param id
+     * @throws IllegalArgumentException if inMenu doesn't correspond to a menu
+     */
+    public void addMenuItem(String inMenu, String name, int id) {
         JMenu selectedMenu = menus.get(inMenu);
         if (selectedMenu == null) {
-            // TODO ignore or implement
+            throw new IllegalArgumentException("No such menu");
         } else {
-            selectedMenu.add(new ChannelItem(item, id, onClickListener));
+            selectedMenu.add(new ChannelItem(name, id, onClickListener));
         }
     }
 
@@ -50,7 +57,9 @@ public class ChannelMenu extends JMenuBar {
             setAction(new AbstractAction(name) {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    listener.onClick(name, id); // TODO if null
+                    if (listener != null) {
+                        listener.onClick(name, id);
+                    }
                 }
             });
         }

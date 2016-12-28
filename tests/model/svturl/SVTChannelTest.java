@@ -21,4 +21,13 @@ public class SVTChannelTest {
                 svtChannel.build());
     }
 
+    @Test
+    public void shouldDisablePagination() throws Exception {
+        SVTTableau svtTableau = new SVTTableau(165);
+        svtTableau.disablePagination();
+        assertEquals(
+                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid=165&pagination=false"),
+                svtTableau.build());
+    }
+
 }

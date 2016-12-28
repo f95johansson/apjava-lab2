@@ -11,6 +11,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Facade
@@ -34,9 +36,6 @@ public class RadioUI {
     private Tableau tableau;
 
     public RadioUI() {
-        //System.setProperty("apple.laf.useScreenMenuBar", "true");
-        //System.setProperty("com.apple.mrj.application.apple.menu.about.name", "RadioInfo");
-
         SwingUtilities.invokeLater(this::setup);
     }
 
@@ -46,10 +45,15 @@ public class RadioUI {
 
         window.setLayout(new BoxLayout(window.getContentPane(), BoxLayout.Y_AXIS));
 
-        channelMenu = new ChannelMenu();
-        channelDisplay = new ChannelDisplay();
-        episodeInfo = new EpisodeInfo();
-        tableau = new Tableau();
+        try {
+            channelMenu = new ChannelMenu();
+            channelDisplay = new ChannelDisplay();
+            episodeInfo = new EpisodeInfo();
+            tableau = new Tableau();
+        } catch (CreationFailedException e) {
+            JOptionPane.showMessageDialog(window, "Application failed to load");
+            System.exit(0);
+        }
 
         window.setJMenuBar(channelMenu);
         window.add(channelDisplay);
@@ -65,24 +69,30 @@ public class RadioUI {
         window.setVisible(true);
     }
 
-    public void setMenus(Collection<String> menus, Collection<Triplet<String, String, Integer>> dropdowns) {
+    public void setMenus(Collection<String> menus, Map<String, List<MenuInfo>> dropdowns) {
         SwingUtilities.invokeLater(() -> {
             for (String menu : menus) {
                 channelMenu.addMenu(menu);
             }
-            for (Triplet<String, String, Integer> menuItem : dropdowns) {
-                channelMenu.addMenuItem(menuItem.getFirst(), menuItem.getSecond(), menuItem.getThird());
-            }
+            dropdowns.forEach((inMenu, items) -> {
+                for (MenuInfo info : items) {
+                    try {
+                        channelMenu.addMenuItem(inMenu, info.getName(), info.getID());
+                    } catch (IllegalArgumentException e) {
+                        // inMenu not a menu, ignore
+                    }
+                }
+            });
         });
     }
 
-    public void setDisplayMenu(Collection<Triplet<InputStream, String, Integer>> imageMenus) {
+    public void setDisplayMenu(Collection<MenuInfo> imageMenus) {
         SwingUtilities.invokeLater(() -> {
-            for (Triplet<InputStream, String, Integer> menu : imageMenus) {
+            for (MenuInfo menu : imageMenus) {
                 try {
-                    channelDisplay.addMenu(ImageIO.read(menu.getFirst()), menu.getSecond(), menu.getThird());
+                    channelDisplay.addMenu(ImageIO.read(menu.getImage()), menu.getName(), menu.getID());
                 } catch (IOException e) {
-                    e.printStackTrace(); // FIXME empty catch
+                    channelDisplay.addMenu(null, menu.getName(), menu.getID());
                 }
             }
         });
@@ -107,7 +117,7 @@ public class RadioUI {
                 try {
                     episodeInfo.setImage(ImageIO.read(image));
                 } catch (IOException e) {
-                    e.printStackTrace(); // FIXME empty catch
+                    episodeInfo.setImage(null);
                 }
             } else {
                 episodeInfo.setImage(null);
@@ -124,15 +134,18 @@ public class RadioUI {
 
     public void setColor(String hexColor) {
         SwingUtilities.invokeLater(() -> {
+            Color color;
             try {
                 String newHex = hexColor; // to be able to change
                 if (!newHex.startsWith("#")) {
                     newHex = "#" + newHex;
                 }
-                window.getContentPane().setBackground(Color.decode(newHex));
+                color = Color.decode(newHex);
             } catch (NumberFormatException | NullPointerException e) {
-                window.getContentPane().setBackground(DEFAULT_BACKGROUND);
+                color = DEFAULT_BACKGROUND;
             }
+            window.getContentPane().setBackground(color);
+            tableau.setBackground(color);
         });
     }
 

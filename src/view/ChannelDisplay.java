@@ -8,6 +8,7 @@ package view;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import static java.awt.Image.SCALE_SMOOTH;
@@ -20,27 +21,42 @@ public class ChannelDisplay extends JPanel {
 
     private static final int IMAGE_BUTTON_SIZE = 58;
 
-    private Image p2Image;
+    private Image defaultImage;
     private Image imageButtonShadow;
     private OnClick onClickListener;
 
-    public ChannelDisplay() {
+    public ChannelDisplay() throws CreationFailedException {
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         setBackground(new Color(0, 0, 0, 0));
 
         try {
 
-            p2Image = ImageIO.read(getClass().getResourceAsStream("/p2.jpg"));
             imageButtonShadow = ImageIO.read(getClass().getResourceAsStream("/image_button_shadow.png"));
+            defaultImage = new BufferedImage(IMAGE_BUTTON_SIZE, IMAGE_BUTTON_SIZE, BufferedImage.TYPE_INT_ARGB);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            // FIXME empty catch
+            throw new CreationFailedException(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new CreationFailedException("Failed to load images");
         }
     }
 
     public void addMenu(Image image, String name, int id) {
-        add(new ImageButton(image, name, id, onClickListener));
+        if (image == null) {
+            drawNameOnImage(name, defaultImage);
+            add(new ImageButton(defaultImage, name, id, onClickListener));
+        } else {
+            add(new ImageButton(image, name, id, onClickListener));
+
+        }
+    }
+
+    private void drawNameOnImage(String name, Image image) {
+        Graphics graphics = image.getGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, IMAGE_BUTTON_SIZE, IMAGE_BUTTON_SIZE);
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(name, 10, IMAGE_BUTTON_SIZE/2);
     }
 
     public void setOnClickListener(OnClick listener) {

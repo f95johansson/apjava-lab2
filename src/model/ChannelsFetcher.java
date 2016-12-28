@@ -43,11 +43,14 @@ public class ChannelsFetcher implements Runnable {
             ChannelsParser parser = new ChannelsParser(url.openStream());
             List<Channel> channels = parser.parse();
 
-            channelsLoadedListener.onChannelsLoaded(channels); // TODO if null
+            if (channelsLoadedListener != null) {
+                channelsLoadedListener.onChannelsLoaded(channels);
+            }
             cacheChannels(channels);
 
         } catch (XMLStreamException | IOException e) {
             e.printStackTrace();
+            // FIXME empty catch
         }
     }
 

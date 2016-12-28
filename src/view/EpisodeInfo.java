@@ -30,7 +30,7 @@ public class EpisodeInfo extends JComponent {
 
     private JLabel label;
 
-    public EpisodeInfo() {
+    public EpisodeInfo() throws CreationFailedException {
         setLayout(null);
 
         label = new JLabel(text);
@@ -42,8 +42,9 @@ public class EpisodeInfo extends JComponent {
             backgroundMiddle = ImageIO.read(getClass().getResourceAsStream("/info_background_middle.png"));
             backgroundRight = ImageIO.read(getClass().getResourceAsStream("/info_background_right.png"));
         } catch (IOException e) {
-            e.printStackTrace();
-            // FIXME empty catch
+            throw new CreationFailedException(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new CreationFailedException("Failed to load images");
         }
     }
 
@@ -114,18 +115,6 @@ public class EpisodeInfo extends JComponent {
         if (episodeImage != null) {
             g.drawImage(episodeImage, MARGIN+SIDE_SHADOW_WIDTH, MARGIN+TOP_SHADOW_HEIGHT, EPISODE_IMAGE_SIZE, EPISODE_IMAGE_SIZE, null);
         }
-
-
-        /*
-        g.setFont(RobotoFont.getFont(18f));
-        g.drawString(title, MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE, MARGIN+TOP_SHADOW_HEIGHT+24);
-        g.setFont(RobotoFont.getFont(13f));
-        g.drawString(subtitle, MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE, MARGIN+TOP_SHADOW_HEIGHT+40);
-        g.setFont(RobotoFont.getFont(13f));
-        g.drawString(text, MARGIN+SIDE_SHADOW_WIDTH+EPISODE_IMAGE_SIZE, MARGIN+TOP_SHADOW_HEIGHT+50);
-        */
-
-        //label.paint(g);
     }
 
     private String formatCenteredText() {

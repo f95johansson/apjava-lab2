@@ -43,7 +43,7 @@ public class Tableau extends JPanel {
     private Image shadowRightCorner;
     private Map<Integer, Integer> ids = new HashMap<>();
 
-    public Tableau() {
+    public Tableau() throws CreationFailedException {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         table = new JTable(0, 2);
@@ -102,8 +102,9 @@ public class Tableau extends JPanel {
             shadowLeftCorner = ImageIO.read(getClass().getResourceAsStream("/tablaou-left-corner.png"));
             shadowRightCorner = ImageIO.read(getClass().getResourceAsStream("/tablaou-right-corner.png"));
         } catch (IOException e) {
-            e.printStackTrace();
-            // FIXME empty catch
+            throw new CreationFailedException(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new CreationFailedException("Failed to load images");
         }
     }
 
@@ -138,7 +139,9 @@ public class Tableau extends JPanel {
                 if (value != null) {
                     String name = value.toString();
                     int id = ids.get(table.getSelectedRow());
-                    itemSelectListener.onItemSelect(name, table.getSelectedRow(), id); // TODO if null
+                    if (itemSelectListener != null) {
+                        itemSelectListener.onItemSelect(name, table.getSelectedRow(), id);
+                    }
                 }
                 repaint();
             }

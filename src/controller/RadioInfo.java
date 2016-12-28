@@ -11,7 +11,7 @@ import model.parser.Channel;
 import model.parser.Episode;
 import view.RadioUI;
 import view.TableauRow;
-import view.Triplet;
+import view.MenuInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,10 +19,7 @@ import java.net.URL;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class RadioInfo implements RadioUI.EpisodeSelect,
                                   RadioUI.ChannelSelect,
@@ -57,8 +54,7 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         Episode episode = updater.getEpisode(index);
 
         if (episode == null) {
-            // TODO can't find episode
-            return;
+            return; // can't find episode
         }
 
         InputStream image = null;
@@ -85,28 +81,33 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
 
     @Override
     public void onChannelsLoaded(List<Channel> channels) {
-        Set<String> channelTypes = new LinkedHashSet<>();
-        List<Triplet<String, String, Integer>> channelItems = new ArrayList<>();
+        Set<String> channelTypes = new LinkedHashSet<>(); // uses set for uniqueness and linked to preserve order
+        Map<String, List<MenuInfo>> channelItems = new HashMap<>();
 
-        List<Triplet<InputStream, String, Integer>> displayChannels = new ArrayList<>();
+        List<MenuInfo> displayChannels = new ArrayList<>();
 
         for (Channel channel : channels) {
             if (channel.channeltype.equals(PRIMARY_CHANNEL)) {
+                InputStream image;
                 try {
                     URL imageURL = new URL(channel.image);
-                    displayChannels.add(new Triplet<>(
-                            imageURL.openStream(),
-                            channel.name,
-                            channel.id));
+                    image = imageURL.openStream();
                 } catch (IOException e) {
-                    e.printStackTrace(); // FIXME empty catch
+                    image = null;
                 }
+                displayChannels.add(new MenuInfo(
+                        image,
+                        channel.name,
+                        channel.id));
 
             } else {
 
                 channelTypes.add(channel.channeltype);
-                channelItems.add(new Triplet<>(
-                        channel.channeltype,
+                if (!channelItems.containsKey(channel.channeltype)) {
+                    channelItems.put(channel.channeltype, new ArrayList<>());
+                }
+                channelItems.get(channel.channeltype).add(new MenuInfo(
+                        null, // no image needed
                         channel.name,
                         channel.id));
             }
