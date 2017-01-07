@@ -14,14 +14,26 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * ChannelsParser is a specific XML parser for the SR API of channels
+ */
 public class ChannelsParser extends Parser<Channel> {
 
     private List<Channel> channels;
 
-    public ChannelsParser(InputStream stream) throws IOException, XMLStreamException {
+    /**
+     * {@inheritDoc}
+     */
+    public ChannelsParser(InputStream stream) throws IOException,
+                                                     XMLStreamException {
         super(stream);
     }
 
+    /**
+     * Parses the XML-file according to the SR API.
+     * @return A list containing information about all the channels
+     * @throws XMLStreamException If XML Stream encountered error
+     */
     @Override
     public List<Channel> parse() throws XMLStreamException {
         XMLEventReader reader = getReader();
@@ -32,7 +44,9 @@ public class ChannelsParser extends Parser<Channel> {
             XMLEvent event = reader.nextEvent();
             if (event.isStartElement()) {
                 if (isElement(event.asStartElement(), "channel")) {
-                    Iterator<Attribute> attributes = event.asStartElement().getAttributes();
+                    Iterator<Attribute> attributes =
+                            event.asStartElement().getAttributes();
+
                     Channel channel = parseChannel(reader);
                     parseChannelAttributes(attributes, channel);
                     channels.add(channel);
@@ -43,7 +57,14 @@ public class ChannelsParser extends Parser<Channel> {
         return channels;
     }
 
-    private Channel parseChannel(XMLEventReader reader) throws XMLStreamException {
+    /**
+     * Parses a <channel> element in the XML-file.
+     * @param reader XML reader for the file
+     * @return A Channel containing all the information from the XML-file
+     * @throws XMLStreamException If XML Stream encountered error
+     */
+    private Channel parseChannel(XMLEventReader reader)
+                                                    throws XMLStreamException {
 
         Channel channel = new Channel();
 
@@ -61,7 +82,13 @@ public class ChannelsParser extends Parser<Channel> {
         return channel;
     }
 
-    private void parseChannelAttributes(Iterator<Attribute> attributes, Channel channel) {
+    /**
+     * Parses the attributes for a <channel> element
+     * @param attributes Attributes to parse
+     * @param channel The channel to add information to
+     */
+    private void parseChannelAttributes(Iterator<Attribute> attributes,
+                                        Channel channel) {
         while (attributes.hasNext()) {
             Attribute attribute = attributes.next();
             if (isAttribute(attribute, "id")) {

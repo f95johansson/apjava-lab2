@@ -12,6 +12,8 @@ import java.util.TimerTask;
 
 public class AutoUpdater {
 
+    private static int UPDATE_TIME = 5 * 1000; // millisecond
+
     private TableauUpdater updater;
     private boolean started = false;
 
@@ -26,7 +28,7 @@ public class AutoUpdater {
                 public void run() {
                     updater.update();
                 }
-            }, 0, 5 * 1000);
+            }, 0, UPDATE_TIME);
 
             started = true;
         }

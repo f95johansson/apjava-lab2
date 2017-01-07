@@ -14,14 +14,25 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * ChannelsParser is a specific XML parser for the SR API of tableau's
+ */
 public class TableauParser extends Parser<Episode> {
 
     private List<Episode> episodes;
 
+    /**
+     * {@inheritDoc}
+     */
     public TableauParser(InputStream stream) throws IOException, XMLStreamException {
         super(stream);
     }
 
+    /**
+     * Parses the XML-file according to the SR API.
+     * @return A list containing information about all the episodes
+     * @throws XMLStreamException If XML Stream encountered error
+     */
     @Override
     public List<Episode> parse() throws XMLStreamException {
         XMLEventReader reader = getReader();
@@ -40,22 +51,32 @@ public class TableauParser extends Parser<Episode> {
         return episodes;
     }
 
-    private Episode parseScheduledEpisode(XMLEventReader reader) throws XMLStreamException {
+    /**
+     * Parses a <scheduledepisode> in the XML-file
+     * @param reader XML reader for the file
+     * @return An Episode containing all the episode information
+     * @throws XMLStreamException If XML Stream encountered error
+     */
+    private Episode parseScheduledEpisode(XMLEventReader reader)
+                                                     throws XMLStreamException {
 
         Episode episode = new Episode();
 
         Map<String, Consumer<String>> mapElements = new HashMap<>();
-        Map<String, Consumer<Iterator<Attribute>>> mapAttributes = new HashMap<>();
+        Map<String, Consumer<Iterator<Attribute>>> mapAttributes =
+                                                                new HashMap<>();
 
         mapElements.put("episodeid", data -> episode.episodeid = toInt(data));
         mapElements.put("title", data -> episode.title = data);
-        mapElements.put("starttimeutc", data -> episode.starttime = toDate(data));
+        mapElements.put("starttimeutc",
+                        data -> episode.starttime = toDate(data));
         mapElements.put("endtimeutc", data -> episode.endtime = toDate(data));
         mapElements.put("subtitle", data -> episode.subtitle = data);
         mapElements.put("description", data -> episode.description = data);
         mapElements.put("url", data -> episode.url = data);
         mapElements.put("imageurl", data -> episode.imageurl = data);
-        mapElements.put("imageurltemplate", data -> episode.imageurltemplate = data);
+        mapElements.put("imageurltemplate",
+                        data -> episode.imageurltemplate = data);
 
         mapAttributes.put("program", attrs -> parseProgram(attrs, episode));
         mapAttributes.put("channel", attrs -> parseChannel(attrs, episode));
@@ -65,6 +86,11 @@ public class TableauParser extends Parser<Episode> {
         return episode;
     }
 
+    /**
+     * Parse a <program> elements attributes
+     * @param attributes Attributes to parse
+     * @param episode Episode to add information to
+     */
     private void parseProgram(Iterator<Attribute> attributes, Episode episode) {
         while (attributes.hasNext()) {
             Attribute attribute = attributes.next();
@@ -76,6 +102,11 @@ public class TableauParser extends Parser<Episode> {
         }
     }
 
+    /**
+     * Parse a <channel> elements attributes
+     * @param attributes Attributes to parse
+     * @param episode Episode to add information to
+     */
     private void parseChannel(Iterator<Attribute> attributes, Episode episode) {
         while (attributes.hasNext()) {
             Attribute attribute = attributes.next();

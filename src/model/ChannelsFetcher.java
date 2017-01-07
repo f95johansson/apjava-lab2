@@ -7,7 +7,7 @@ package model;
 
 import model.parser.Channel;
 import model.parser.ChannelsParser;
-import model.svturl.SVTChannel;
+import model.srurl.SRAPIChannel;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
@@ -19,7 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ChannelsFetcher implements Runnable {
 
+
     public interface ChannelsLoaded {
+        /**
+         *
+         * @param channels List of channels loaded. Will be null if
+         *                 could not read from url/stream
+         */
         void onChannelsLoaded(List<Channel> channels);
     }
 
@@ -36,7 +42,7 @@ public class ChannelsFetcher implements Runnable {
 
     @Override
     public void run() {
-        SVTChannel api = new SVTChannel();
+        SRAPIChannel api = new SRAPIChannel();
         api.disablePagination();
         try {
             URL url = api.build();
@@ -49,8 +55,8 @@ public class ChannelsFetcher implements Runnable {
             cacheChannels(channels);
 
         } catch (XMLStreamException | IOException e) {
-            e.printStackTrace();
-            // FIXME empty catch
+            // could not read from stream
+            channelsLoadedListener.onChannelsLoaded(null);
         }
     }
 
@@ -68,7 +74,8 @@ public class ChannelsFetcher implements Runnable {
 
     public Channel getChannel(int id) {
         if (cachedChannels == null || cachedChannels.size() == 0) {
-            throw new IllegalStateException("Must fetch before getting specific channel");
+            throw new IllegalStateException(
+                      "Must fetch before getting specific channel");
         }
         return cachedChannels.get(id);
     }

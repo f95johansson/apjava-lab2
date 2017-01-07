@@ -9,9 +9,9 @@ import model.ChannelsFetcher;
 import model.TableauUpdater;
 import model.parser.Channel;
 import model.parser.Episode;
+import view.MenuInfo;
 import view.RadioUI;
 import view.TableauRow;
-import view.MenuInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,10 +81,16 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
 
     @Override
     public void onChannelsLoaded(List<Channel> channels) {
-        Set<String> channelTypes = new LinkedHashSet<>(); // uses set for uniqueness and linked to preserve order
+        Set<String> channelTypes = new LinkedHashSet<>();
+        // uses set for uniqueness and linked to preserve order
         Map<String, List<MenuInfo>> channelItems = new HashMap<>();
 
         List<MenuInfo> displayChannels = new ArrayList<>();
+
+        if (channels == null) {
+            setErrorMessage("Could not load information. Check internet connection");
+            return;
+        }
 
         for (Channel channel : channels) {
             if (channel.channeltype.equals(PRIMARY_CHANNEL)) {
@@ -126,6 +132,11 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         DateTimeFormatter format = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT); // HH:MM
         int nowIndex = 0;
 
+        if (channelID == -1 || episodes == null) {
+            setErrorMessage("Could not load information. Check internet connection");
+            return;
+        }
+
         for (int i = 0, episodesSize = episodes.size(); i < episodesSize; i++) {
             Episode episode = episodes.get(i);
             boolean hasHappened = false;
@@ -145,6 +156,13 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
 
         ui.setTableauContent(tableauEpisodes);
         ui.setEpisodeSelected(nowIndex);
+    }
+
+    private void setErrorMessage(String message) {
+        List<TableauRow> tableauEpisodes = new ArrayList<>();
+        tableauEpisodes.add(new TableauRow("", message, -1, true));
+        ui.setTableauContent(tableauEpisodes);
+        ui.setEpisodeSelected(0);
     }
 
     public static void main(String[] args) {

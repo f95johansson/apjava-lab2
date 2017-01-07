@@ -7,22 +7,31 @@ package model.parser;
 
 import java.time.ZonedDateTime;
 
+
+/**
+ * Simple class for containing all possible information about an episode
+ */
 public class Episode {
 
     public int episodeid = -1;
-    public String title;
-    public String subtitle;
-    public String description;
-    public String url;
-    public String imageurl;
-    public String imageurltemplate;
+    public String title = "";
+    public String subtitle  = "";
+    public String description  = "";
+    public String url = "";
+    public String imageurl = "";
+    public String imageurltemplate = "";
     public ZonedDateTime starttime;
     public ZonedDateTime endtime;
-    public int programid;
-    public String programName;
-    public int channelid;
-    public String channelName;
+    public int programid = 0;
+    public String programName = "";
+    public int channelid = 0;
+    public String channelName = "";
 
+    /**
+     * {@inheritDoc}
+     *
+     * Generated with IntelliJ 2016.2
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -55,6 +64,11 @@ public class Episode {
 
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Generated with IntelliJ 2016.2
+     */
     @Override
     public int hashCode() {
         int result = episodeid;
@@ -73,6 +87,11 @@ public class Episode {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Generated with IntelliJ 2016.2
+     */
     @Override
     public String toString() {
         return "Episode{" +

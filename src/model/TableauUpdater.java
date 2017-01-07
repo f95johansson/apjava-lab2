@@ -7,7 +7,7 @@ package model;
 
 import model.parser.Episode;
 import model.parser.TableauParser;
-import model.svturl.SVTTableau;
+import model.srurl.SRAPITableau;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;
@@ -23,6 +23,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TableauUpdater implements Runnable {
 
     public interface TableauLoaded {
+        /**
+         *
+         * @param channelID Channel id for tableau loaded. Will be -1 if
+         *                  could not read from xml/stream
+         * @param episodes Episodes within tha tableau. Will be null if
+         *                  could not read from xml/stream
+         */
         void onTableauLoaded(int channelID, List<Episode> episodes);
     }
 
@@ -30,7 +37,7 @@ public class TableauUpdater implements Runnable {
     private TableauLoaded tableauLoadedListener;
     private AtomicInteger channelID = new AtomicInteger();
     private AtomicBoolean idChanged = new AtomicBoolean(false);
-    private CopyOnWriteArrayList<Episode> cachedEpisodes;
+    private CopyOnWriteArrayList<Episode> cachedEpisodes = new CopyOnWriteArrayList<>();
 
     public void setChannelToLoad(int id) {
         channelID.set(id);
@@ -57,29 +64,26 @@ public class TableauUpdater implements Runnable {
 
     @Override
     public void run() {
-        SVTTableau api = new SVTTableau(channelID.get());
+        SRAPITableau api = new SRAPITableau(channelID.get());
         api.disablePagination();
         api.setDate(LocalDate.now());
         try {
             URL url = api.build();
             TableauParser tableauParser = new TableauParser(url.openStream());
 
+            // Must always test to see if interrupted before continuing
             if (Thread.currentThread().isInterrupted()) {
                 return;
             }
 
             List<Episode> episodes = tableauParser.parse();
-            /*if (episodes.equals(cachedEpisodes)) {
-                return; // nothing new in update
-            }*/
-
 
             if (Thread.currentThread().isInterrupted()) {
                 return;
             }
 
             if (tableauLoadedListener != null) {
-                tableauLoadedListener.onTableauLoaded(channelID.get(), episodes);
+               tableauLoadedListener.onTableauLoaded(channelID.get(), episodes);
             }
             cacheEpisodes(episodes);
 
@@ -94,8 +98,11 @@ public class TableauUpdater implements Runnable {
             cacheEpisodes(episodes);
 
         } catch (XMLStreamException | IOException e) {
-            e.printStackTrace();
-            // FIXME Empty catch
+            // could not read from stream
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+            tableauLoadedListener.onTableauLoaded(-1, null);
         }
     }
 
@@ -104,7 +111,11 @@ public class TableauUpdater implements Runnable {
     }
 
     public Episode getEpisode(int index) {
-        return cachedEpisodes.get(index);
+        try {
+            return cachedEpisodes.get(index);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public void setTableauLoadedListener(TableauLoaded listener) {

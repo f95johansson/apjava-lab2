@@ -3,15 +3,15 @@
  * Author: Fredrik Johansson
  * Date: 2016-12-20
  */
-package model.svturl;
+package model.srurl;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class SVTTableau extends SVTAPI {
+public class SRAPITableau extends SRAPI {
 
-    public SVTTableau(int channelID) {
-        super(SVTAPI.TABLUE_URL);
+    public SRAPITableau(int channelID) {
+        super(SRAPI.TABLEAU_URL);
         appendParameter("channelid", channelID);
     }
 
