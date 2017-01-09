@@ -61,22 +61,26 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         try {
             image = new URL(episode.imageurl).openStream();
         } catch (IOException | NullPointerException e) {
-            /* image = null */
+            /* result: image = null */
         }
 
-        ui.setEpisodeContent(episode.title, episode.subtitle, episode.description, image);
+        ui.setEpisodeContent(episode.title, episode.subtitle,
+                             episode.description, image);
     }
 
     @Override
     public void onChannelSelect(String name, int id) {
-        updater.setChannelToLoad(id);
+        if (id != -1) {
+            updater.setChannelToLoad(id);
+        }
         updater.update();
 
         Channel channel = fetcher.getChannel(id);
-        ui.setColor(channel.color);
-        ui.setTitle(channel.name);
-
-        ui.clear();
+        if (channel != null) {
+            ui.setColor(channel.color);
+            ui.setTitle(channel.name);
+            ui.clear();
+        }
     }
 
     @Override
@@ -88,7 +92,8 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         List<MenuInfo> displayChannels = new ArrayList<>();
 
         if (channels == null) {
-            setErrorMessage("Could not load information. Check internet connection");
+            setErrorMessage("Could not load information. " +
+                            "Check internet connection");
             return;
         }
 
@@ -129,11 +134,13 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
     @Override
     public void onTableauLoaded(int channelID, List<Episode> episodes) {
         List<TableauRow> tableauEpisodes = new ArrayList<>();
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm"); // HH:MM
+
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm");
         int nowIndex = 0;
 
         if (channelID == -1 || episodes == null) {
-            setErrorMessage("Could not load information. Check internet connection");
+            setErrorMessage("Could not load information. " +
+                            "Check internet connection");
             return;
         }
 
@@ -151,7 +158,8 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
             String time = episode.starttime.format(format);
             time += " - ";
             time += episode.endtime.format(format);
-            tableauEpisodes.add(new TableauRow(time, episode.title, episode.episodeid, !hasHappened));
+            tableauEpisodes.add(new TableauRow(time, episode.title,
+                    episode.episodeid, !hasHappened));
         }
 
         ui.setTableauContent(tableauEpisodes);
