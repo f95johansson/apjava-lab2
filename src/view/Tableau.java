@@ -16,7 +16,7 @@ import java.util.Map;
 
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
-public class Tableau extends JPanel {
+class Tableau extends JPanel {
 
     public interface ItemSelect {
         void onItemSelect(String name, int index, int id);

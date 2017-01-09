@@ -5,7 +5,7 @@
  */
 package view;
 
-public class CreationFailedException extends Exception {
+class CreationFailedException extends Exception {
         public CreationFailedException() {
             super();
         }

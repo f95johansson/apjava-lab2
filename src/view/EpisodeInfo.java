@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * EpisodeInfo displays information about an episode on a rectangle
  */
-public class EpisodeInfo extends JComponent {
+class EpisodeInfo extends JComponent {
 
     private final int MARGIN = 12;
     private final int EPISODE_IMAGE_SIZE = 110;
@@ -191,11 +191,12 @@ public class EpisodeInfo extends JComponent {
                     "</b>";
         }
 
+        int w = getWidth()-100-MARGIN*2-SIDE_SHADOW_WIDTH*2-EPISODE_IMAGE_SIZE;
         return  "<html><body><p style=\"font-size:14px;\">" +
                 title +
                 formattedSubtitle +
                 "</p><p style=\"width:" +
-                (getWidth()-MARGIN*2-SIDE_SHADOW_WIDTH*2-EPISODE_IMAGE_SIZE) +
+                w +
                 "px\">" +
                 text +
                 "</p></body></html>";

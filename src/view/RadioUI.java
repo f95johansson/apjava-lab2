@@ -95,6 +95,8 @@ public class RadioUI {
                     channelDisplay.addMenu(null, menu.getName(), menu.getID());
                 }
             }
+            channelDisplay.addRefreshButton();
+
         });
     }
 
