@@ -48,6 +48,7 @@ public class Tableau extends JPanel {
 
         table = new JTable(0, 2);
         table.setIntercellSpacing(new Dimension(0, 0));
+        table.setShowGrid(false);
 
         JLabel label = new JLabel("<html><body><pre style=\"font-size:12px;font-family:sans-serif\">Tid      Program</pre></body></html>");
         label.setBorder(BorderFactory.createEmptyBorder(

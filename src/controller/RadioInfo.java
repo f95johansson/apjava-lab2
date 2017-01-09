@@ -129,7 +129,7 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
     @Override
     public void onTableauLoaded(int channelID, List<Episode> episodes) {
         List<TableauRow> tableauEpisodes = new ArrayList<>();
-        DateTimeFormatter format = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT); // HH:MM
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm"); // HH:MM
         int nowIndex = 0;
 
         if (channelID == -1 || episodes == null) {
