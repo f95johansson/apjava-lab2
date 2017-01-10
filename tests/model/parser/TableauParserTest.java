@@ -119,15 +119,35 @@ public class TableauParserTest {
         assertEquals(realEpisodes.get(1).endtime, episodes.get(1).endtime);
     }
 
-    // more specific test could be added
+    // more specific tests could be added
 
     @Test
-    public void shouldParse() throws Exception {
+    public void shouldParseOneEpisode() throws Exception {
+        InputStream stream = new ByteArrayInputStream(
+                exampleXML.getBytes(StandardCharsets.UTF_8));
+        TableauParser parser = new TableauParser(stream);
+        List<Episode> episodes = parser.parse();
+
+        assertEquals(realEpisodes.get(0), episodes.get(0));
+    }
+
+    @Test
+    public void shouldParseMultipleEpisodes() throws Exception {
         InputStream stream = new ByteArrayInputStream(
                 exampleXML.getBytes(StandardCharsets.UTF_8));
         TableauParser parser = new TableauParser(stream);
         List<Episode> episodes = parser.parse();
 
         assertEquals(realEpisodes, episodes);
+    }
+
+    @Test
+    public void shouldParseEmptyXML() throws Exception {
+        InputStream stream = new ByteArrayInputStream(
+                "".getBytes(StandardCharsets.UTF_8));
+        TableauParser parser = new TableauParser(stream);
+        List<Episode> episodes = parser.parse();
+
+        assertEquals(new ArrayList<Episode>(), episodes);
     }
 }

@@ -18,11 +18,17 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.*;
 
+
+/**
+ * RadioInfo cares care of bridging the user interface and the logic.
+ * It will also take care of what to do with user interaction and
+ * information from the logic.
+ */
 public class RadioInfo implements RadioUI.EpisodeSelect,
                                   RadioUI.ChannelSelect,
+                                  RadioUI.Refresh,
                                   TableauUpdater.TableauLoaded,
                                   ChannelsFetcher.ChannelsLoaded {
 
@@ -33,6 +39,9 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
     private ChannelsFetcher fetcher;
     private RadioUI ui;
 
+    /**
+     * Starts a new ui and start to load in channels to be displayed to user
+     */
     public RadioInfo() {
         updater = new TableauUpdater();
         updater.setTableauLoadedListener(this);
@@ -45,10 +54,19 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         ui = new RadioUI();
         ui.setEpisodeSelectListener(this);
         ui.setChannelSelectListener(this);
+        ui.setOnRefreshListener(this);
 
-        fetcher.fetch();
+        fetcher.fetch(); // load channels
     }
 
+    /**
+     * This method is used as a listener on the ui and will receive
+     * event upon user interaction, whenever an episode is selected.
+     * It will load information about the episode onto the ui.
+     * @param name Title of episode
+     * @param index Index of episode
+     * @param id Id for episode
+     */
     @Override
     public void onEpisodeSelect(String name, int index, int id) {
         Episode episode = updater.getEpisode(index);
@@ -61,18 +79,23 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         try {
             image = new URL(episode.imageurl).openStream();
         } catch (IOException | NullPointerException e) {
-            /* result: image = null */
+            /* result: image = null // could not load image */
         }
 
         ui.setEpisodeContent(episode.title, episode.subtitle,
-                             episode.description, image);
+                    episode.description, image);
     }
 
+    /**
+     * This method is used as a listener on the ui and will receive
+     * event upon user interaction, whenever a channel is selected.
+     * It will load in the tableau for that channel and show it on the ui.
+     * @param name Name of channel
+     * @param id Id of channel
+     */
     @Override
     public void onChannelSelect(String name, int id) {
-        if (id != -1) {
-            updater.setChannelToLoad(id);
-        }
+        updater.setChannelToLoad(id);
         updater.update();
 
         Channel channel = fetcher.getChannel(id);
@@ -83,6 +106,22 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         }
     }
 
+    /**
+     * This method is used as a listener on the ui and will receive
+     * event upon user interaction, whenever a manual refresh is triggered.
+     */
+    @Override
+    public void onRefresh() {
+        updater.update();
+    }
+
+    /**
+     * This method acts as listener on the model, whenever all the
+     * channels have loaded. It will take this information about the
+     * channels and show it to the user on the ui.
+     * @param channels List of channels loaded. Will be null if
+     *                 model couldn't load any channels
+     */
     @Override
     public void onChannelsLoaded(List<Channel> channels) {
         Set<String> channelTypes = new LinkedHashSet<>();
@@ -126,11 +165,20 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         ui.setMenus(channelTypes, channelItems);
         ui.setDisplayMenu(displayChannels);
 
-        ui.setChannelSelected(0);
+        autoUpdater.start(); // start if not already started
 
-        autoUpdater.start();
+        onChannelSelect(channels.get(0).name, channels.get(0).id);
     }
 
+    /**
+     * This method acts as listener on the model, whenever tableau for
+     * a channel has loaded. The tableau containing information about
+     * each episode will be shown to the user on the ui.
+     * @param channelID Channel id for tableau loaded. Will be -1 if
+     *                  could not load tableau
+     * @param episodes Episodes within the tableau. Will be null if
+     *                 could not load tableau
+     */
     @Override
     public void onTableauLoaded(int channelID, List<Episode> episodes) {
         List<TableauRow> tableauEpisodes = new ArrayList<>();
@@ -166,13 +214,23 @@ public class RadioInfo implements RadioUI.EpisodeSelect,
         ui.setEpisodeSelected(nowIndex);
     }
 
+    /**
+     * Will show an error message to the user. Current implementation
+     * show the message in the table, but future implementation might
+     * be more standalone
+     * @param message Error message to show to user
+     */
     private void setErrorMessage(String message) {
         List<TableauRow> tableauEpisodes = new ArrayList<>();
         tableauEpisodes.add(new TableauRow("", message, -1, true));
+        ui.clear();
         ui.setTableauContent(tableauEpisodes);
         ui.setEpisodeSelected(0);
     }
 
+    /**
+     * Main method. Will start up a RadioInfo
+     */
     public static void main(String[] args) {
         new RadioInfo();
     }

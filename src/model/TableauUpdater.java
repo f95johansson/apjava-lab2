@@ -110,6 +110,7 @@ public class TableauUpdater implements Runnable {
             }
 
             List<Episode> episodes = tableauParser.parse();
+            cacheEpisodes(episodes);
 
             if (Thread.currentThread().isInterrupted()) {
                 return;
@@ -118,17 +119,16 @@ public class TableauUpdater implements Runnable {
             if (tableauLoadedListener != null) {
                tableauLoadedListener.onTableauLoaded(channelID.get(), episodes);
             }
-            cacheEpisodes(episodes);
 
         } catch (FileNotFoundException e) {
             // Load empty list of episodes
+            List<Episode> episodes = new ArrayList<>();
+            cacheEpisodes(episodes);
 
             if (Thread.currentThread().isInterrupted()) {
                 return;
             }
-            List<Episode> episodes = new ArrayList<>();
             tableauLoadedListener.onTableauLoaded(channelID.get(), episodes);
-            cacheEpisodes(episodes);
 
         } catch (XMLStreamException | IOException e) {
             // could not read from stream

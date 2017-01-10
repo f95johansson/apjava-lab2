@@ -34,7 +34,8 @@ public class SRAPIChannelTest {
         SRAPITableau SRAPITableau = new SRAPITableau(165);
         SRAPITableau.disablePagination();
         assertEquals(
-                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid=165&pagination=false"),
+                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid" +
+                        "=165&pagination=false"),
                 SRAPITableau.build());
     }
 

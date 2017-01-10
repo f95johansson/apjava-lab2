@@ -19,7 +19,8 @@ public class SRAPITableauTest {
     public void shouldAddChannelID() throws Exception {
         SRAPITableau SRAPITableau = new SRAPITableau(165);
         assertEquals(
-                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid=165"),
+                new URL("http://api.sr.se/api/v2/scheduledepisodes?" +
+                        "channelid=165"),
                 SRAPITableau.build());
     }
 
@@ -28,7 +29,8 @@ public class SRAPITableauTest {
         SRAPITableau SRAPITableau = new SRAPITableau(165);
         SRAPITableau.disablePagination();
         assertEquals(
-                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid=165&pagination=false"),
+                new URL("http://api.sr.se/api/v2/scheduledepisodes?" +
+                        "channelid=165&pagination=false"),
                 SRAPITableau.build());
     }
 
@@ -37,7 +39,8 @@ public class SRAPITableauTest {
         SRAPITableau SRAPITableau = new SRAPITableau(165);
         SRAPITableau.setDate(LocalDate.of(2016, 10, 23));
         assertEquals(
-                new URL("http://api.sr.se/api/v2/scheduledepisodes?channelid=165&date=2016-10-23"),
+                new URL("http://api.sr.se/api/v2/scheduledepisodes?" +
+                        "channelid=165&date=2016-10-23"),
                 SRAPITableau.build());
     }
 

@@ -5,6 +5,10 @@
  */
 package view;
 
+/**
+ * Will be thrown when a component failed to be created, often because
+ * of failed loading of needed images
+ */
 class CreationFailedException extends Exception {
         public CreationFailedException() {
             super();
